@@ -1,1 +1,13 @@
-print "hello word"
+/* This is a commentary block the intepreter
+will skip */
+// This is another way of doing commentary
+print "hello word";
+a = 123.45;
+print a;
+a + a
+
+fun(f, a) {
+    f(a);
+}
+
+fun(add1, 1);
