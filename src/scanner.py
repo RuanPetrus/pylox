@@ -1,78 +1,13 @@
-import sys
-from enum import Enum, auto
+#!/usr/bin/env python3
+from pylox_token import TokenType, Token
 
-from typing import Any, List
-
-
-class TokenType(Enum):
-    # Single-character tokens.
-    LEFT_PAREN = auto()
-    RIGHT_PAREN = auto()
-    LEFT_BRACE = auto()
-    RIGHT_BRACE = auto()
-
-    COMMA = auto()
-    DOT = auto()
-    MINUS = auto()
-    PLUS = auto()
-    SEMICOLON = auto()
-    SLASH = auto()
-    STAR = auto()
-
-    # One or two character tokens.
-    BANG = auto()
-    BANG_EQUAL = auto()
-
-    EQUAL = auto()
-    EQUAL_EQUAL = auto()
-
-    GREATER = auto()
-    GREATER_EQUAL = auto()
-
-    LESS = auto()
-    LESS_EQUAL = auto()
-
-    # Literals.
-    IDENTIFIER = auto()
-    STRING = auto()
-    NUMBER = auto()
-
-    # Keywords.
-    AND = auto()
-    CLASS = auto()
-    ELSE = auto()
-    FALSE = auto()
-    FUN = auto()
-    FOR = auto()
-    IF = auto()
-    NIL = auto()
-    OR = auto()
-
-    PRINT = auto()
-    RETURN = auto()
-    SUPER = auto()
-    THIS = auto()
-    TRUE = auto()
-    VAR = auto()
-    WHILE = auto()
-
-    EOF = auto()
-
-
-class Token:
-    def __init__(self, token_type: TokenType, lexeme: str, literal: Any, line: int):
-        self.token_type = token_type
-        self.lexeme = lexeme
-        self.literal = literal
-        self.line = line
-
-    def __str__(self) -> str:
-        return f"{self.token_type} {self.lexeme} {self.literal}"
+from typing import List, Any
 
 
 class Scanner:
-    def __init__(self, source: str):
+    def __init__(self, error_ctx, source: str):
         self.source = source
+        self.error_ctx = error_ctx
         self.start = 0
         self.current = 0
         self.line = 1
@@ -190,7 +125,7 @@ class Scanner:
                 self._identifier()
 
             else:
-                Pylox.error(self.line, f"Unexpected character: {c}.")
+                self.error_ctx.error(self.line, f"Unexpected character: {c}.")
 
     def _identifier(self):
         while Scanner._isAlphaNumeric(self._peek()):
@@ -234,7 +169,7 @@ class Scanner:
             self._advance()
 
         if self._isAtEnd():
-            Pylox.error(self.line, "Unterminated string.")
+            self.error_ctx.error(self.line, "Unterminated string.")
             return
 
         self._advance()
@@ -273,62 +208,3 @@ class Scanner:
 
         self.current += 1
         return True
-
-
-class Pylox:
-    hadError = False
-
-    @staticmethod
-    def runFile(file_path: str):
-        with open(file_path, "r") as f:
-            src = f.read()
-
-        if Pylox.hadError:
-            exit(65)
-
-        Pylox.run(src)
-
-    @staticmethod
-    def runPrompt():
-        while True:
-            print(">", end=" ")
-            line = input()
-
-            if not line:
-                break
-
-            Pylox.run(line)
-            Pylox.hadError = False
-
-    @staticmethod
-    def run(source: str):
-        scanner = Scanner(source)
-        tokens = scanner.scanTokens()
-
-        for token in tokens:
-            print(token)
-
-    @staticmethod
-    def error(line: int, message: str):
-        Pylox._report(line, "", message)
-
-    @staticmethod
-    def _report(line: int, where: str, message: str):
-        print(f"[line {line}] Error{where}: {message}")
-        Pylox.hadError = True
-
-
-def main():
-    if len(sys.argv) > 2:
-        print("Usage: pylox [script]")
-        exit(64)
-
-    elif len(sys.argv) == 2:
-        Pylox.runFile(sys.argv[1])
-
-    else:
-        Pylox.runPrompt()
-
-
-if __name__ == "__main__":
-    main()
